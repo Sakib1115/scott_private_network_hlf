@@ -1,0 +1,142 @@
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+version: '2'
+
+volumes:
+  orderer01.scott.com:
+  peer0.hlf.scott.com:
+  peer1.hlf.scott.com:
+
+networks:
+  scott:
+
+services:
+
+  orderer01.scott.com:
+    container_name: orderer01.scott.com
+    image: hyperledger/fabric-orderer:2.2.4
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=8051
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/keystore/priv_key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/signcerts/cert.pem
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/tlscacerts/tls-localhost-8054-ca-orderer.pem]
+      - ORDERER_KAFKA_TOPIC_REPLICATIONFACTOR=1
+      - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/signcerts/cert.pem
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/keystore/priv_key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/tlscacerts/tls-localhost-8054-ca-orderer.pem]
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+        - ../network/ordererOrganizations/scott.com/system-genesis-block/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+        - ../network/ordererOrganizations/scott.com/orderers/orderer01.scott.com/msp:/var/hyperledger/orderer/msp
+        - ../network/ordererOrganizations/scott.com/orderers/orderer01.scott.com/tls:/var/hyperledger/orderer/tls
+        - orderer01.scott.com:/var/hyperledger/production/orderer
+    ports:
+      - 8051:8051
+    networks:
+      - scott
+
+  peer0.hlf.scott.com:
+    container_name: peer0.hlf.scott.com
+    image: hyperledger/fabric-peer:2.2.4
+    environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # the following setting starts chaincode containers on the same
+      # bridge network as the peers
+      # https://docs.docker.com/compose/networking/
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=compose-files_scott
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/signcerts/cert.pem
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/keystore/priv_key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/tlscacerts/tls-localhost-7054-ca-scott.pem
+      # Peer specific variabes
+      - CORE_PEER_ID=peer0.hlf.scott.com
+      - CORE_PEER_ADDRESS=peer0.hlf.scott.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.hlf.scott.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.hlf.scott.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.hlf.scott.com:7051
+      - CORE_PEER_LOCALMSPID=ScottMSP
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
+      # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+      # provide the credentials for ledger to connect to CouchDB.  The username and password must
+      # match the username and password set for the associated CouchDB.
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../network/peerOrganizations/hlf.scott.com/peers/peer0.hlf.scott.com/msp:/etc/hyperledger/fabric/msp
+        - ../network/peerOrganizations/hlf.scott.com/peers/peer0.hlf.scott.com/tls:/etc/hyperledger/fabric/tls
+        - peer0.hlf.scott.com:/var/hyperledger/production
+       # - ../network/peerOrganizations/hlf.scott.com/peers/peer0.hlf.scott.com/conf/core.yaml:/etc/hyperledger/fabric/core.yaml
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 7051:7051
+    networks:
+      - scott
+
+  peer1.hlf.scott.com:
+    container_name: peer1.hlf.scott.com
+    image: hyperledger/fabric-peer:2.2.4
+    environment:
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # the following setting starts chaincode containers on the same
+      # bridge network as the peers
+      # https://docs.docker.com/compose/networking/
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=compose-files_scott
+      - FABRIC_LOGGING_SPEC=INFO
+      #- FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/signcerts/cert.pem
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/keystore/priv_key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/tlscacerts/tls-localhost-7054-ca-scott.pem
+      # Peer specific variabes
+      - CORE_PEER_ID=peer1.hlf.scott.com
+      - CORE_PEER_ADDRESS=peer1.hlf.scott.com:7151
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7151
+      - CORE_PEER_CHAINCODEADDRESS=peer1.hlf.scott.com:7152
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7152
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.hlf.scott.com:7151
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.hlf.scott.com:7151
+      - CORE_PEER_LOCALMSPID=ScottMSP
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
+      # The CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME and CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD
+      # provide the credentials for ledger to connect to CouchDB.  The username and password must
+      # match the username and password set for the associated CouchDB.
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+      
+    volumes:
+        - /var/run/:/host/var/run/
+        - ../network/peerOrganizations/hlf.scott.com/peers/peer1.hlf.scott.com/msp:/etc/hyperledger/fabric/msp
+        - ../network/peerOrganizations/hlf.scott.com/peers/peer1.hlf.scott.com/tls:/etc/hyperledger/fabric/tls
+        - peer1.hlf.scott.com:/var/hyperledger/production
+   #     - ../network/peerOrganizations/hlf.scott.com/peers/peer1.hlf.scott.com/conf/core.yaml:/etc/hyperledger/fabric/core.yaml
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 7151:7151
+    networks:
+      - scott

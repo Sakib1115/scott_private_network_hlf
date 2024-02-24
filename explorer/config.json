@@ -1,0 +1,9 @@
+{
+	"network-configs": {
+		"test-network": {
+			"name": "Scott Network",
+			"profile": "./connection-profile/scott-network.json"
+		}
+	},
+	"license": "Apache-2.0"
+}

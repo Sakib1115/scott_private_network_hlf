@@ -1,0 +1,7 @@
+{
+        "walletPath":"/home/user/ScottAPI/javascript/wallet",
+        "channel":"mychannel",
+        "chaincode":"scott",
+        "appUser":"appUser",
+        "connectionProfilePath":"/home/user/ScottFabric/fabric-samples/test-network/organizations/peerOrganizations/org1.example.com/connection-org1.json"
+}

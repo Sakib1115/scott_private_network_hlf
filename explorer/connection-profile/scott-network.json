@@ -1,0 +1,48 @@
+{
+	"name": "scott-network",
+	"version": "1.0.0",
+	"client": {
+		"tlsEnable": true,
+		"adminCredential": {
+			"id": "exploreradmin",
+			"password": "exploreradminpw"
+		},
+		"enableAuthentication": true,
+		"organization": "ScottMSP",
+		"connection": {
+			"timeout": {
+				"peer": {
+					"endorser": "300"
+				},
+				"orderer": "300"
+			}
+		}
+	},
+	"channels": {
+		"mychannel": {
+			"peers": {
+				"peer0.hlf.scott.com": {}
+			}
+		}
+	},
+	"organizations": {
+		"ScottMSP": {
+			"mspid": "ScottMSP",
+			"adminPrivateKey": {
+				"path": "/opt/explorer/crypto/peerOrganizations/hlf.scott.com/user/User1/msp/keystore/priv_sk"
+			},
+			"peers": ["peer0.org1.scott.com"],
+			"signedCert": {
+				"path": "/opt/explorer/crypto/peerOrganizations/hlf.scott.com/user/User1/msp/signcerts/User1@org1.scott.com-cert.pem"
+			}
+		}
+	},
+	"peers": {
+		"peer0.hlf.scott.com": {
+			"tlsCACerts": {
+				"path": "/opt/explorer/crypto/peerOrganizations/hlf.scott.com/peers/peer0.hlf.scott.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer0.hlf.scott.com:7051"
+		}
+	}
+}
